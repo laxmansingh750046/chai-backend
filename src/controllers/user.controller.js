@@ -295,7 +295,7 @@ const deleteAndUpdateImage = async(req, res,type)=>{
     return res
     .status(200)
     .json(
-        new ApiResponse(200, user, `${type} uploaded succesfully`)
+        new ApiResponse(200, user, `${type} image uploaded succesfully`)
     );
 }
 

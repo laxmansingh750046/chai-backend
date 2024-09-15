@@ -1,5 +1,6 @@
 import {v2 as cloudinary} from "cloudinary";
 import fs from "fs";
+import { ApiError } from "./ApiError.js";
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,7 +35,7 @@ const deleteFromCloudinary = async(url)=>{
         if(!url)return null;
         const publicId = extractPublicIdFromUrl(url);
         const response = await cloudinary.uploader.destroy(publicId,{
-            resource_type: "auto"
+            resource_type: "image"
         });
         console.log("File deleted successfully ",response);
         return response;
