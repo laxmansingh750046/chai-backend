@@ -3,6 +3,7 @@ import {ApiError} from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary, deleteFromCloudinary} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose"
 import jwt from "jsonwebtoken";
 
 const generateAccessAndRefereshTokens = async (userId)=>{
@@ -178,8 +179,8 @@ const logoutUser = asyncHandler(async (req,res,next)=>{
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1 // this remove the field from token
             }
         },
         {
@@ -438,7 +439,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
 
     return res
     .status(200)
-    .json(200, channel[0], "user channel fetched succesfully");
+    .json( new ApiResponse(200, channel[0], "user channel fetched succesfully"));
 });
 
 const getWatchHistory = asyncHandler(async(req,res)=>{
