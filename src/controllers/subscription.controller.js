@@ -70,23 +70,40 @@ const getRandomChannelSubscribers = asyncHandler(async (req, res) => {
     // Aggregation pipeline to fetch subscribers and their usernames
     const channelSubscribers = await Subscription.aggregate([
         {
-            $match: { channel: new mongoose.Types.ObjectId(channelId) }
+          $match: {
+            channel: new mongoose.Types.ObjectId(channelId)
+          }
         },
         {
-            $lookup: {
-                from: "users",
-                localField: "subscriber",
-                foreignField: "_id",
-                as: "subscribers"
+          $lookup: {
+            from: "users",
+            localField: "subscriber",
+            foreignField: "_id",
+            as: "subscriber_detail",
+          }
+        },
+        {
+          $addFields: {
+            subscriber_detail: {
+              $arrayElemAt: ["$subscriber_detail.username", 0]
             }
-        }    
-    ]);
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            subscribers: {
+              $push: "$subscriber_detail"
+            }
+          }
+        }
+      ]);
 
     console.log("subscribers list :",channelSubscribers);
 
     return res
         .status(200)
-        .json(new ApiResponse(200, channelSubscribers, "Fetched all subscribers"));
+        .json(new ApiResponse(200, channelSubscribers[0].subscribers, "Fetched all subscribers"));
 });
 
 // controller to return channel list to which user has subscribed
