@@ -60,7 +60,7 @@ const getRandomChannelSubscribers = asyncHandler(async (req, res) => {
 
     // Check if the channelId is valid
     if(!isValidObjectId(channelId)){
-        throw new ApiError(400, "invalid subscriber Id");
+        throw new ApiError(400, "invalid channel Id");
     }
     
     const channel = await User.findById(channelId);
@@ -107,12 +107,54 @@ const getRandomChannelSubscribers = asyncHandler(async (req, res) => {
 });
 
 // controller to return channel list to which user has subscribed
-const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const { channelId } = req.params
+const getSubscribedChannels = asyncHandler(async (req, res) => {
+    const { channelId } = req.params;
+    if(!isValidObjectId(channelId)){
+        throw new ApiError(400, "invalid channel Id");
+    }
+    const channel = await User.findById(channelId);
+    if(!channel){
+        throw new ApiError(400, "channel does not exist");
+    }
+
+    const subscribedChannels = await Subscription.aggregate([
+        {
+          $match: {
+            subscriber: new mongoose.Types.ObjectId(channelId)
+          }
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "channel",
+            foreignField: "_id",
+            as: "channel_details",
+          }
+        },
+        {
+          $addFields: {
+            channel_details: {
+              $arrayElemAt: ["$channel_details.username", 0]
+            }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+          subscribed_channels: {
+              $push: "$channel_details"
+            }
+          }
+        }
+      ]);
+
+      return res
+      .status(200)
+      .json( new ApiResponse(200,subscribedChannels[0].subscribed_channels," subscribed channels fetched succesfully" ));
 })
 
 export {
     toggleSubscription,
     getRandomChannelSubscribers,
-    getUserChannelSubscribers
+    getSubscribedChannels
 }
